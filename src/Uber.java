@@ -20,8 +20,8 @@ import org.apache.hadoop.mapreduce.lib.reduce.WrappedReducer.Context;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-public class Uber implements Tool{
-public class uberMapper extends Mapper<Object, Text, Text, IntWritable>{
+public static class Uber {
+public static class uberMapper extends Mapper<Object, Text, Text, IntWritable>{
 	 private int trip;
 	 private String[] week= {"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"};
 	 private Text nextKey=new Text();
@@ -52,7 +52,7 @@ public void  map(Object key,Text value, Context context) throws IOException, Int
 
 	}
 
-public class uberReducer extends Reducer<Text,IntWritable,Text,IntWritable>{
+public static class uberReducer extends Reducer<Text,IntWritable,Text,IntWritable>{
 	  private IntWritable iwSum=new IntWritable();
 	public void reduce(Text nextkey, Iterable<IntWritable> values,Context context) throws IOException, InterruptedException {
 		int sum=0;
@@ -64,15 +64,15 @@ public class uberReducer extends Reducer<Text,IntWritable,Text,IntWritable>{
 	}
 }
 
-public int run(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
+public static void main(String[] args) throws Exception {
 	Configuration conf = new Configuration();
     String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
 	if (otherArgs.length < 2) {
         System.err.println("Usage: wordcount <in> [<in>...] <out>");
-        return 2;
+        System.exit(2);
       }
 	Job job = Job.getInstance(conf,"uber");
-	job.setJarByClass(Uber.class);
+	job.setJar("Uber.class");
 	job.setMapperClass(uberMapper.class);
 	job.setCombinerClass(IntSumReducer.class);
 	job.setReducerClass(uberReducer.class);
@@ -80,25 +80,9 @@ public int run(String[] args) throws IOException, ClassNotFoundException, Interr
 	 job.setOutputValueClass(IntWritable.class);
 	 for (int i = 0; i < otherArgs.length - 1; ++i) {
 	      FileInputFormat.addInputPath(job, new Path(otherArgs[i]));
-	      FileOutputFormat.setOutputPath(job,
-	    	      new Path(otherArgs[otherArgs.length - 1]));
+	 }
+	 FileOutputFormat.setOutputPath(job,new Path(otherArgs[otherArgs.length - 1]));
 	      System.exit(job.waitForCompletion(true) ? 0 : 1);
 	    }
-	return 0;
-	
 }
-public static void main(String[] args) throws Exception {
-	 int res = ToolRunner.run(new Configuration(),  new Uber(), args);
-	    System.exit(res);
-}
-@Override
-public Configuration getConf() {
-	// TODO Auto-generated method stub
-	return null;
-}
-@Override
-public void setConf(Configuration arg0) {
-	// TODO Auto-generated method stub
-	
-}
-}
+
